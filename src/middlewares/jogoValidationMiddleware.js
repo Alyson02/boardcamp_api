@@ -5,7 +5,7 @@ export default async function jogoValidationMiddleware(req, res, next) {
   try {
     const body = req.body;
 
-    const { error } = jogoModel.validate(body);
+    const { error } = jogoModel.validate(body, { abortEarly: false });
     if (error) {
       const erros = error.details.map((d) => d.message);
       return res.status(422).send(erros);

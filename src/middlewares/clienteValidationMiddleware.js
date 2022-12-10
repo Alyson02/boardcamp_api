@@ -1,11 +1,12 @@
 import connectDB from "../db.js";
-import categoriaModel from "../models/categoriaModel.js";
+import clienteModel from "../models/clienteModel.js";
 
-export default async function categoriaValidationMiddleware(req, res, next) {
+export default async function clienteValidationMiddleware(req, res, next) {
   try {
     const body = req.body;
+    const { id } = req.params;
 
-    const { error } = categoriaModel.validate(body, { abortEarly: false });
+    const { error } = clienteModel.validate(body, { abortEarly: false });
     if (error) {
       const erros = error.details.map((d) => d.message);
       return res.status(422).send(erros);
@@ -14,12 +15,12 @@ export default async function categoriaValidationMiddleware(req, res, next) {
     const db = await connectDB();
     const { rows } = await db.query(
       `
-      SELECT * FROM categories WHERE name = $1
+      SELECT * FROM customers WHERE cpf = $1
     `,
-      [body.name]
+      [body.cpf]
     );
 
-    if (rows.length > 0) return res.sendStatus(409);
+    if (rows.length > 0 && rows[0].id != id) return res.sendStatus(409);
 
     next();
   } catch (error) {
