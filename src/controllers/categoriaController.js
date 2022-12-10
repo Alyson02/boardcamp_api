@@ -5,7 +5,7 @@ export async function adicionarCategoria(req, res) {
     const body = req.body;
 
     const db = await connectDB();
-    const result = await db.query(
+    await db.query(
       `
         INSERT INTO categories VALUES(default, $1)
     `,
@@ -14,7 +14,6 @@ export async function adicionarCategoria(req, res) {
 
     res.sendStatus(201);
   } catch (error) {
-    console.log(error);
     res.status(500).send("Erro interno");
   }
 }

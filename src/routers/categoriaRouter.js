@@ -8,11 +8,11 @@ import categoriaValidationMiddleware from "../middlewares/categoriaValidationMid
 const categoriaRouter = Router();
 
 categoriaRouter.post(
-  "/categoria",
+  "/categories",
   categoriaValidationMiddleware,
   adicionarCategoria
 );
 
-categoriaRouter.get("/categorias", listarCategorias);
+categoriaRouter.get("/categories", listarCategorias);
 
 export default categoriaRouter;

@@ -19,7 +19,6 @@ export default async function connectDB() {
   }
 
   const { Pool } = pg;
-  console.log(connectionParams)
   const db = new Pool(connectionParams);
 
   await db.connect();
