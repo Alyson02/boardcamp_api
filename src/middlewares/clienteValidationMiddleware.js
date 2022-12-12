@@ -1,10 +1,12 @@
 import connectDB from "../db.js";
 import clienteModel from "../models/clienteModel.js";
+import dayjs from "dayjs";
 
 export default async function clienteValidationMiddleware(req, res, next) {
   try {
     const body = req.body;
     const { id } = req.params;
+    body.birthday = dayjs(body.birthday).format("YYYY-MM-DD");
 
     const { error } = clienteModel.validate(body, { abortEarly: false });
     if (error) {
