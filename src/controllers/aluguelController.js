@@ -34,7 +34,7 @@ export async function adicionarAluguel(req, res) {
 export async function listarAlugueis(req, res) {
   try {
     const db = await connectDB();
-    const { gameId, customerId } = req.query;
+    const { gameId, customerId, status, startDate, offset, limit } = req.query;
     let rows;
 
     let query = `SELECT 
@@ -43,16 +43,88 @@ export async function listarAlugueis(req, res) {
                  JOIN customers c ON r."customerId" = c.id 
                  JOIN games g ON r."gameId" = g.id
                  JOIN categories cat ON g."categoryId" = cat.id`;
-    if (gameId) {
+
+    if (gameId && !customerId) {
       query += ` where "gameId" = $1`;
-      rows = (await db.query(query, [gameId])).rows;
-    } else if (customerId) {
+    }
+
+    if (customerId && !gameId) {
       query += ` where "customerId" = $1`;
-      rows = (await db.query(query, [customerId])).rows;
-    } else if (gameId && customerId) {
+    }
+
+    if (gameId && customerId) {
       query += ` where "customerId" = $1 and "gameId" = $2`;
-      rows = (await db.query(query, [customerId, gameId])).rows;
-    } else {
+    }
+
+    if (startDate && !gameId && !customerId) {
+      query += ` WHERE "rentDate" > $1`;
+    }
+
+    if (startDate && !gameId && customerId) {
+      query += ` AND "rentDate" > $2`;
+    }
+
+    if (startDate && gameId && !customerId) {
+      query += ` AND "rentDate" > $2`;
+    }
+
+    if (startDate && gameId && customerId) {
+      query += ` AND "rentDate" > $3`;
+    }
+
+    if (status && !gameId && !customerId && !startDate) {
+      if (status === "open") {
+        query += ` WHERE "returnDate" IS NULL`;
+      } else if (status === "closed") {
+        query += ` WHERE "returnDate" IS NOT NULL`;
+      }
+    }
+
+    if (status && (gameId || customerId || startDate)) {
+      if (status === "open") {
+        query += ` AND "returnDate" IS NULL`;
+      } else if (status === "closed") {
+        query += ` AND "returnDate" IS NOT NULL`;
+      }
+    }
+
+    if(limit){
+      query += ` LIMIT ${limit}`
+    }
+
+    if(offset){
+      query += ` OFFSET  ${offset}`
+    }
+
+    if (gameId && !customerId) {
+      if (startDate) {
+        rows = (await db.query(query, [gameId, startDate])).rows;
+      } else {
+        rows = (await db.query(query, [gameId])).rows;
+      }
+    }
+
+    if (customerId && !gameId) {
+      if (startDate) {
+        rows = (await db.query(query, [customerId, startDate])).rows;
+      } else {
+        rows = (await db.query(query, [customerId])).rows;
+      }
+    }
+
+    if (gameId && customerId) {
+      if (startDate) {
+        rows = (await db.query(query, [customerId, gameId, startDate])).rows;
+      } else {
+        rows = (await db.query(query, [customerId, gameId])).rows;
+      }
+    }
+
+    if (startDate && !gameId && !customerId) {
+      rows = (await db.query(query, [startDate])).rows;
+    }
+
+    if (!gameId && !customerId && !startDate) {
       rows = (await db.query(query)).rows;
     }
 
@@ -107,10 +179,10 @@ export async function finalizarAluguel(req, res) {
 
     const delayFee = atraso > 0 ? aluguel.pricePerDay * atraso : 0;
 
-    await db.query(` UPDATE rentals SET "returnDate" = $1, "delayFee" = $2`, [
-      returnDate,
-      delayFee,
-    ]);
+    await db.query(
+      ` UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3`,
+      [returnDate, delayFee, id]
+    );
 
     res.sendStatus(200);
   } catch (error) {
