@@ -24,9 +24,11 @@ export async function listarClientes(req, res) {
     const { cpf } = req.query;
     let rows;
 
-    let query = `SELECT * FROM customers`;
+    let query = ` SELECT c.*, COUNT(r."customerId") as rentalsCount 
+                  FROM customers c JOIN rentals r on c.id = r."customerId" 
+                  GROUP BY r."customerId", c.id`;
     if (cpf) {
-      query += ` where cpf like $1`;
+      query += ` HAVING cpf like $1`;
       rows = (await db.query(query, [`${cpf}%`])).rows;
     } else {
       rows = (await db.query(query)).rows;
@@ -34,6 +36,7 @@ export async function listarClientes(req, res) {
 
     res.send(rows);
   } catch (error) {
+    console.log(error);
     res.status(500).send("Erro interno");
   }
 }

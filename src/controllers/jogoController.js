@@ -30,9 +30,13 @@ export async function listarJogos(req, res) {
     const { name } = req.query;
     let rows;
 
-    let query = `SELECT g.*, c.name as "categoryName" FROM games g JOIN categories c on g."categoryId" = c.Id`;
+    let query = ` SELECT 
+                    g.*, c.name as "categoryName", COUNT(r."gameId") as rentalsCount 
+                  FROM games g 
+                  JOIN categories c on g."categoryId" = c.Id
+                  JOIN rentals r on g.id = r."gameId" GROUP BY r."gameId", g.id, c.name`;
     if (name) {
-      query += ` where g.name like $1`;
+      query += ` HAVING g.name like $1`;
       rows = (await db.query(query, [`${name}%`])).rows;
     } else {
       rows = (await db.query(query)).rows;
