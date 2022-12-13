@@ -34,7 +34,16 @@ export async function adicionarAluguel(req, res) {
 export async function listarAlugueis(req, res) {
   try {
     const db = await connectDB();
-    const { gameId, customerId, status, startDate, offset, limit } = req.query;
+    const {
+      gameId,
+      customerId,
+      status,
+      startDate,
+      offset,
+      limit,
+      order,
+      desc,
+    } = req.query;
     let rows;
 
     let query = `SELECT 
@@ -88,12 +97,23 @@ export async function listarAlugueis(req, res) {
       }
     }
 
-    if(limit){
-      query += ` LIMIT ${limit}`
+    if (limit) {
+      query += ` LIMIT ${limit}`;
     }
 
-    if(offset){
-      query += ` OFFSET  ${offset}`
+    if (offset) {
+      query += ` OFFSET  ${offset}`;
+    }
+
+    if (order) {
+      const orderSeparado = order.split(".");
+      const table = orderSeparado[0];
+      const column = orderSeparado[1];
+      query += ` ORDER BY ${table}."${column}"`;
+    }
+
+    if (desc) {
+      query += ` DESC`;
     }
 
     if (gameId && !customerId) {
