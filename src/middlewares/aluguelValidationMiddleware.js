@@ -25,7 +25,7 @@ export default async function aluguelValidationMiddleware(req, res, next) {
     if (rows.length === 0 || gamesRows.length === 0) return res.sendStatus(400);
 
     const { rows: alugueisJogo } = await db.query(
-      `SELECT r.* FROM rentals r JOIN games g on r."gameId" = g.id where r."gameId" = $1 and r."returnDate" IS NOT NULL`,
+      `SELECT r.* FROM rentals r JOIN games g on r."gameId" = g.id where r."gameId" = $1 and r."returnDate" IS NULL`,
       [body.gameId]
     );
     if (alugueisJogo.length === gamesRows[0].stockTotal) {
