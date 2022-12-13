@@ -34,13 +34,15 @@ export async function listarJogos(req, res) {
                     g.*, c.name as "categoryName", COUNT(r."gameId") as rentalsCount 
                   FROM games g 
                   JOIN categories c on g."categoryId" = c.Id
-                  JOIN rentals r on g.id = r."gameId" GROUP BY r."gameId", g.id, c.name`;
+                  LEFT JOIN rentals r on g.id = r."gameId" GROUP BY r."gameId", g.id, c.name`;
     if (name) {
       query += ` HAVING g.name like $1`;
       rows = (await db.query(query, [`${name}%`])).rows;
     } else {
       rows = (await db.query(query)).rows;
     }
+
+    console.log(await db.query(query));
 
     res.send(rows);
   } catch (error) {

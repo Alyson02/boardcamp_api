@@ -25,7 +25,7 @@ export async function listarClientes(req, res) {
     let rows;
 
     let query = ` SELECT c.*, COUNT(r."customerId") as rentalsCount 
-                  FROM customers c JOIN rentals r on c.id = r."customerId" 
+                  FROM customers c LEFT JOIN rentals r on c.id = r."customerId" 
                   GROUP BY r."customerId", c.id`;
     if (cpf) {
       query += ` HAVING cpf like $1`;
