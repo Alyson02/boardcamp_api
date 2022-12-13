@@ -237,3 +237,43 @@ export async function deletarAluguel(req, res) {
     res.status(500).send("Erro interno");
   }
 }
+
+export async function metricas(req, res) {
+  try {
+    const db = await connectDB();
+    const { startDate, endDate } = req.query;
+
+    let queryReceita = `SELECT SUM("delayFee" + "originalPrice") as revenue from rentals`;
+    let queryAluguel = `SELECT COUNT(*) as rentals FROM rentals`;
+
+    if (startDate && !endDate) {
+      queryReceita += ` WHERE "rentDate" > '${startDate}'`;
+      queryAluguel += ` WHERE "rentDate" > '${startDate}'`;
+    }
+
+    if (!startDate && endDate) {
+      queryReceita += ` WHERE "rentDate" < '${endDate}'`;
+      queryAluguel += ` WHERE "rentDate" < '${endDate}'`;
+    }
+
+    if (startDate && endDate) {
+      queryReceita += ` WHERE "rentDate" BETWEEN '${startDate}' AND '${endDate}'`;
+      queryAluguel += ` WHERE "rentDate" BETWEEN '${startDate}' AND '${endDate}'`;
+    }
+
+    console.log(queryAluguel);
+
+    const revenue = (await db.query(queryReceita)).rows[0].revenue;
+
+    const rentals = (await db.query(queryAluguel)).rows[0].rentals;
+
+    const average = (revenue / rentals).toFixed(2);
+
+    if (isNaN(average)) return res.sendStatus(400);
+
+    res.send({ revenue, rentals, average });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("Erro interno");
+  }
+}
